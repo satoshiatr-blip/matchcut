@@ -1,6 +1,6 @@
 import {
   ALL_FORMATS, AudioBufferSource, AudioSampleSink, BlobSource, BufferTarget, CanvasSink, CanvasSource,
-  Input, Mp4OutputFormat, Output, QUALITY_HIGH,
+  Input, Mp4OutputFormat, Output, QUALITY_HIGH, canEncodeAudio, canEncodeVideo,
 } from 'mediabunny'
 import type { Player, Project, Scene, ZoomRect } from './types'
 
@@ -465,6 +465,17 @@ export function drawCard(ctx: Ctx, p: Project, kind: 'open' | 'close', t: number
 
 // ---- 書き出し ----
 
+let aacReady: Promise<void> | null = null
+// Safari が AAC を書き出せない場合だけ WASM 版エンコーダを読み込む
+export function ensureAac() {
+  aacReady ??= (async () => {
+    if (await canEncodeAudio('aac', { numberOfChannels: 2, sampleRate: SAMPLE_RATE })) return
+    const { registerAacEncoder } = await import('@mediabunny/aac-encoder')
+    registerAacEncoder()
+  })()
+  return aacReady
+}
+
 export function totalDuration(scenes: Scene[]) {
   return OPEN_SEC + CLOSE_SEC + scenes.reduce((a, s) => a + sceneOutDuration(s), 0)
 }
@@ -492,6 +503,9 @@ export async function exportHighlight({ project, files, bgm, onProgress, signal 
   }
 
   try {
+    if (!(await canEncodeVideo('avc', { width: OUT_W, height: OUT_H })))
+      throw new Error('この端末のブラウザは動画の書き出し（H.264）に対応していません。iOSを最新にしてお試しください')
+    await ensureAac()
     const total = totalDuration(scenes)
     onProgress(0, '音声を準備中')
     const audio = await renderAudio(project, getInput, bgm, total)

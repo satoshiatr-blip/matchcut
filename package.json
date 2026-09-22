@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mediabunny/aac-encoder": "^1.59.0",
     "mediabunny": "^1.59.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
