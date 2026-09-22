@@ -107,23 +107,14 @@ export function drawScene(ctx: Ctx, img: CanvasImageSource, w: number, h: number
   const accent = project.color
   const frame = Math.round(tOut * FPS)
   const dt = tOut - outTimeAt(scene, scene.mark)
-  const impact = dt >= 0 && dt < 0.4
   const z = zoomAt(scene, tOut / dur)
   const punch = dt >= 0 ? 1 + 0.07 * Math.exp(-dt * 5) : 1
   const { sx, sy, sw, sh } = cropRect({ ...z, scale: z.scale * punch }, w, h)
-  const shake = impact ? 22 * (1 - dt / 0.4) : 0
-  const ox = (rnd(frame) - 0.5) * shake, oy = (rnd(frame + 7) - 0.5) * shake
 
   ctx.save()
   if (project.grade && 'filter' in ctx) ctx.filter = 'contrast(1.18) saturate(1.1)'
-  ctx.drawImage(img, sx, sy, sw, sh, ox - 20, oy - 12, OUT_W + 40, OUT_H + 24)
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, OUT_W, OUT_H)
   if ('filter' in ctx) ctx.filter = 'none'
-  if (impact && dt < 0.25) {
-    ctx.globalAlpha = 0.28 * (1 - dt / 0.25)
-    ctx.globalCompositeOperation = 'lighter'
-    ctx.drawImage(img, sx, sy, sw, sh, ox - 38, oy - 12, OUT_W + 40, OUT_H + 24)
-    ctx.drawImage(img, sx, sy, sw, sh, ox + 2, oy - 12, OUT_W + 40, OUT_H + 24)
-  }
   ctx.restore()
 
   if (project.grade) {
@@ -299,7 +290,7 @@ function drawPlate(ctx: Ctx, { scene, player, tOut, dur }: DrawInfo, accent: str
 function drawSlam(ctx: Ctx, word: string, dt: number, accent: string, frame: number) {
   const inK = ease(clamp(dt / 0.14, 0, 1))
   const out = clamp((1.7 - dt) / 0.35, 0, 1)
-  const scale = 1.9 - 0.9 * inK + 0.03 * Math.sin(dt * 9)
+  const scale = 1.9 - 0.9 * inK
   const split = 26 * (1 - inK) + (dt < 0.5 ? 6 * rnd(frame) : 2)
   ctx.save()
   ctx.globalAlpha = out
