@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { exportHighlight, totalDuration } from '../render'
-import { loadBgm, saveBgm } from '../bgmStore'
+import { loadBgm, saveBgm } from '../idb'
 import { playImpactNow } from '../sfx'
 import { IconCheck, IconMusic, IconPhoto, IconSaveVideo } from './icons'
 import { Slam } from './brand'

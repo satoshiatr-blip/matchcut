@@ -1,8 +1,20 @@
 import { useEffect, useState } from 'react'
-import type { Project, Scene, SceneKind } from './types'
+import { idbGet, idbSet } from './idb'
+import type { Player, Project, Scene, SceneKind } from './types'
 import { uid } from './types'
 
 const KEY = 'soccer-highlight:project'
+const ROSTER_KEY = 'matchcut:roster'
+
+// チーム名簿は試合データと別に、localStorage と IndexedDB の両方へ保存する（片方が消えても戻せる）
+type Roster = { team: string; color: string; players: Player[] }
+
+function readRoster(): Roster | null {
+  try {
+    const raw = localStorage.getItem(ROSTER_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
 
 const today = () => new Date().toISOString().slice(0, 10)
 
@@ -25,15 +37,37 @@ export const emptyProject = (): Project => ({
 
 export function useProject() {
   const [project, setProject] = useState<Project>(() => {
+    let p = emptyProject()
     try {
       const raw = localStorage.getItem(KEY)
-      if (raw) return { ...emptyProject(), ...JSON.parse(raw) }
+      if (raw) p = { ...p, ...JSON.parse(raw) }
     } catch { /* 破損時は新規 */ }
-    return emptyProject()
+    const roster = readRoster()
+    if (roster && p.players.length === 0) p = { ...p, team: p.team || roster.team, color: roster.color || p.color, players: roster.players }
+    return p
   })
+
+  useEffect(() => {
+    if (project.players.length > 0) return
+    idbGet<Roster>(ROSTER_KEY).then(r => {
+      if (r?.players.length) setProject(p => p.players.length ? p : { ...p, team: p.team || r.team, color: r.color || p.color, players: r.players })
+    })
+    // 起動時の復元だけ
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     try { localStorage.setItem(KEY, JSON.stringify(project)) } catch { /* 容量超過などは無視 */ }
   }, [project])
+
+  const rosterJson = JSON.stringify({ team: project.team, color: project.color, players: project.players })
+  useEffect(() => {
+    const r: Roster = JSON.parse(rosterJson)
+    if (!r.players.length && !r.team) return
+    try { localStorage.setItem(ROSTER_KEY, rosterJson) } catch { /* 無視 */ }
+    idbSet(ROSTER_KEY, r)
+  }, [rosterJson])
+
   return [project, setProject] as const
 }
 

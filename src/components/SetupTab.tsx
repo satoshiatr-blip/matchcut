@@ -59,10 +59,10 @@ export default function SetupTab({ project, setProject, go }: ProjectProps & { g
       <div>
         <div className="flex items-end justify-between">
           <GroupLabel>選手</GroupLabel>
-          <span className="text-[11px] text-muted mb-2 px-1">先頭の選手がシーンの初期値</span>
+          <span className="text-[11px] text-muted mb-2 px-1">自動で保存・次の試合でも使えます</span>
         </div>
         <Card className="space-y-2.5">
-          {project.players.length === 0 && <p className="text-sm text-muted text-center py-2">背番号と名前がテロップに出ます</p>}
+          {project.players.length === 0 && <p className="text-sm text-muted text-center py-2">背番号と名前がテロップに出ます。先頭の選手がシーンの初期値になります</p>}
           {project.players.map((pl, i) => (
             <div key={pl.id} className="flex gap-2 items-center">
               <input className={`${inputCls} !w-16 text-center font-black italic`} inputMode="numeric" placeholder="#" value={pl.number}

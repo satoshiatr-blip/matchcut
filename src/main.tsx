@@ -11,6 +11,9 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 )
 
+// iOSが容量確保のために保存データ（名簿・BGM）を消さないよう、永続化を頼んでおく
+navigator.storage?.persist?.().catch(() => {})
+
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').then(async () => {
     const reg = await navigator.serviceWorker.ready
