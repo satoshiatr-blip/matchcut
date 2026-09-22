@@ -35,3 +35,4 @@ input[type='range'] { accent-color: var(--color-cyan); }
   mask-image: radial-gradient(circle at 50% 50%, transparent 18%, #000 60%);
 }
 .rise { animation: rise 0.45s cubic-bezier(.2, .8, .2, 1) both }
+@keyframes sheet { from { transform: translateY(100%) } to { transform: none } }

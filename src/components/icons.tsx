@@ -24,3 +24,6 @@ export const IconSpark = base(<path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6
 export const IconShare = base(<><path d="M12 3v12" /><path d="m8 7 4-4 4 4" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" /></>)
 export const IconRewind = base(<><path d="M11 17 6 12l5-5" /><path d="M18 17l-5-5 5-5" /></>)
 export const IconForward = base(<><path d="m13 17 5-5-5-5" /><path d="m6 17 5-5-5-5" /></>)
+export const IconPhoto = base(<><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="m21 16-5-5-9 9" /></>)
+export const IconCheck = base(<path d="m5 12 5 5 9-10" />)
+export const IconSaveVideo = base(<><path d="M12 4v10" /><path d="m8 10 4 4 4-4" /><path d="M5 20h14" /></>)

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 // シンボル：再生三角形を電光の斬撃が断ち切る
 export const Logo = ({ size = 36 }: { size?: number }) => (
@@ -32,7 +33,7 @@ export function Slam({ word, trigger, sub }: { word: string; trigger: number; su
     return () => clearTimeout(t)
   }, [trigger])
   if (!shown) return null
-  return (
+  return createPortal(
     <div key={shown} className="fixed inset-0 z-[60] pointer-events-none grid place-items-center overflow-hidden">
       <div className="absolute inset-0 bg-white animate-[flash_.35s_ease-out_both]" />
       <div className="absolute -inset-1/2 speedlines animate-[flash_1.1s_ease-out_both]" />
@@ -40,6 +41,7 @@ export function Slam({ word, trigger, sub }: { word: string; trigger: number; su
         <p className="text-7xl font-black italic text-white [text-shadow:0_0_24px_#1a73ff,4px_0_0_rgba(255,0,90,.7),-4px_0_0_rgba(0,200,255,.8)] [-webkit-text-stroke:2px_#04060c]">{word}</p>
         {sub && <p className="mt-2 text-sm font-bold text-cyan tracking-[0.3em]">{sub}</p>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

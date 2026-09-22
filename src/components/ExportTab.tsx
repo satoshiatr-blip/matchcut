@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import { exportHighlight, totalDuration } from '../render'
-import { IconMusic, IconShare } from './icons'
+import { IconCheck, IconMusic, IconPhoto, IconSaveVideo } from './icons'
 import { Slam } from './brand'
-import { Button, Card, FilePicker, GroupLabel, Row, ScreenTitle, Slider, Toggle, fmt, useObjectUrl, type ProjectProps } from './ui'
+import { Button, Card, FilePicker, GroupLabel, Row, ScreenTitle, Portal, Slider, Toast, Toggle, fmt, useObjectUrl, type ProjectProps } from './ui'
 
 type Props = ProjectProps & { files: Map<string, File>; addFiles: (f: FileList) => void }
 
@@ -14,6 +14,9 @@ export default function ExportTab({ project, setProject, files, addFiles }: Prop
   const [error, setError] = useState('')
   const [elapsed, setElapsed] = useState(0)
   const [done, setDone] = useState(0)
+  const [sheet, setSheet] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [toast, setToast] = useState('')
   const abortRef = useRef<AbortController | null>(null)
   const resultUrl = useObjectUrl(result)
 
@@ -25,6 +28,7 @@ export default function ExportTab({ project, setProject, files, addFiles }: Prop
     setBusy(true)
     setError('')
     setResult(null)
+    setSaved(false)
     const ac = new AbortController()
     abortRef.current = ac
     const lock = await navigator.wakeLock?.request('screen').catch(() => null)
@@ -34,6 +38,7 @@ export default function ExportTab({ project, setProject, files, addFiles }: Prop
       setElapsed((performance.now() - t0) / 1000)
       setResult(f)
       setDone(Date.now())
+      setTimeout(() => setSheet(true), 1000)
     } catch (e) {
       if (!(e instanceof DOMException && e.name === 'AbortError')) setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -42,12 +47,25 @@ export default function ExportTab({ project, setProject, files, addFiles }: Prop
     }
   }
 
+  // Webアプリは写真ライブラリへ直接書けないため、共有シートの「ビデオを保存」を経由する
   async function save() {
     if (!result) return
-    try {
-      await navigator.share({ files: [result] })
-    } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) setError('共有できませんでした。下の「ダウンロード」を使ってください')
+    if (navigator.canShare?.({ files: [result] })) {
+      try {
+        await navigator.share({ files: [result] })
+        setSaved(true)
+        setSheet(false)
+        setToast('保存しました')
+        setTimeout(() => setToast(''), 1800)
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === 'AbortError')) setError('保存できませんでした。もう一度お試しください')
+      }
+    } else {
+      const a = document.createElement('a')
+      a.href = resultUrl!
+      a.download = result.name
+      a.click()
+      setError('この端末では写真に直接保存できないため、ファイルとしてダウンロードしました')
     }
   }
 
@@ -125,6 +143,33 @@ export default function ExportTab({ project, setProject, files, addFiles }: Prop
       )}
 
       <Slam word="COMPLETE" trigger={done} sub="HIGHLIGHT READY" />
+      <Toast text={toast} />
+
+      {sheet && result && resultUrl && (
+        <Portal>
+        <div className="fixed inset-0 z-50 flex flex-col justify-end">
+          <button className="absolute inset-0 bg-ink/70 backdrop-blur-sm" aria-label="閉じる" onClick={() => setSheet(false)} />
+          <div className="relative bg-surface border-t border-line rounded-t-3xl px-5 pt-3 pb-[max(env(safe-area-inset-bottom),1.25rem)] animate-[sheet_.35s_cubic-bezier(.2,.8,.2,1)_both]">
+            <div className="mx-auto w-10 h-1.5 rounded-full bg-line mb-4" />
+            <p className="text-[11px] font-black italic tracking-[0.25em] text-cyan">HIGHLIGHT READY</p>
+            <h3 className="mt-1 text-2xl font-black italic -skew-x-6 origin-left">完成しました</h3>
+            <video src={`${resultUrl}#t=1.5`} muted playsInline autoPlay loop className="mt-4 w-full rounded-xl bg-black border border-line" />
+            <ol className="mt-4 grid grid-cols-2 gap-2 text-sm">
+              <li className="rounded-xl bg-raised border border-line p-3">
+                <span className="text-[10px] font-black italic text-cyan">01</span>
+                <p className="font-bold">下のボタンをタップ</p>
+              </li>
+              <li className="rounded-xl bg-raised border border-line p-3">
+                <span className="text-[10px] font-black italic text-cyan">02</span>
+                <p className="font-bold flex items-center gap-1">「<IconSaveVideo className="shrink-0" />ビデオを保存」</p>
+              </li>
+            </ol>
+            <Button variant="primary" onClick={save} className="mt-4 w-full min-h-16 text-xl font-black italic"><IconPhoto className="text-2xl" />写真に保存</Button>
+            <button className="w-full py-3 mt-1 text-sm text-muted" onClick={() => setSheet(false)}>あとで</button>
+          </div>
+        </div>
+        </Portal>
+      )}
 
       {error && <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-xl p-3">{error}</p>}
 
@@ -134,8 +179,10 @@ export default function ExportTab({ project, setProject, files, addFiles }: Prop
           <Card className="space-y-4 !border-cyan/40">
             <video src={`${resultUrl}#t=1.5`} controls playsInline className="w-full rounded-xl bg-black" />
             <p className="text-xs text-muted">{(result.size / 1e6).toFixed(0)}MB・書き出し{elapsed.toFixed(0)}秒</p>
-            <Button variant="primary" onClick={save} className="w-full min-h-14 text-lg"><IconShare className="text-xl" />共有 →「ビデオを保存」</Button>
-            <a href={resultUrl} download={result.name} className="block text-center text-sm text-cyan py-2">ダウンロード</a>
+            {saved
+              ? <p className="flex items-center justify-center gap-2 min-h-12 rounded-xl bg-cyan/10 text-cyan font-bold"><IconCheck className="text-xl" />写真に保存済み</p>
+              : <Button variant="primary" onClick={save} className="w-full min-h-14 text-lg"><IconPhoto className="text-xl" />写真に保存</Button>}
+            {saved && <Button onClick={save} className="w-full text-sm">もう一度保存・共有する</Button>}
           </Card>
         </div>
       )}

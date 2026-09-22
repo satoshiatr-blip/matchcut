@@ -1,4 +1,5 @@
 import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import type { Project } from '../types'
 
 export type ProjectProps = {
@@ -113,9 +114,13 @@ export function useObjectUrl(blob: Blob | null | undefined) {
 
 export function Toast({ text }: { text: string }) {
   if (!text) return null
-  return (
+  return createPortal(
     <div className="fixed left-1/2 -translate-x-1/2 bottom-28 z-50 px-5 py-3 rounded-full bg-fg text-ink text-sm font-bold shadow-2xl animate-[toast_.25s_ease-out]">
       {text}
-    </div>
+    </div>,
+    document.body,
   )
 }
+
+// 画面切替アニメーションの重なり順に閉じ込められないよう、全画面の重ね物は body 直下に描く
+export const Portal = ({ children }: { children: ReactNode }) => createPortal(children, document.body)

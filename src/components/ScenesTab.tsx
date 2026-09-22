@@ -6,7 +6,7 @@ import { KIND_JA } from '../types'
 import { IconDown, IconLayers, IconUp } from './icons'
 import { KIND_UI } from './MarkTab'
 import SceneEditor from './SceneEditor'
-import { Button, Card, ScreenTitle, fmt, type ProjectProps } from './ui'
+import { Button, Card, Portal, ScreenTitle, fmt, type ProjectProps } from './ui'
 
 type Props = ProjectProps & { files: Map<string, File>; go: (t: Tab) => void }
 
@@ -124,10 +124,10 @@ export default function ScenesTab({ project, setProject, files, go }: Props) {
       <Button variant="primary" className="w-full min-h-14 text-lg" onClick={() => go('export')}>次へ：書き出す</Button>
 
       {editScene && (
-        <SceneEditor project={project} scene={editScene} file={files.get(editScene.sourceKey) ?? null}
+        <Portal><SceneEditor project={project} scene={editScene} file={files.get(editScene.sourceKey) ?? null}
           onChange={ns => setProject(p => ({ ...p, scenes: p.scenes.map(x => x.id === ns.id ? ns : x) }))}
           onDelete={() => { setProject(p => ({ ...p, scenes: p.scenes.filter(x => x.id !== editScene.id) })); setEditing(null) }}
-          onClose={() => setEditing(null)} />
+          onClose={() => setEditing(null)} /></Portal>
       )}
     </div>
   )
