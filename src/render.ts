@@ -196,9 +196,9 @@ function drawSlowFx(ctx: Ctx, scene: Scene, src: number, frame: number) {
   ctx.font = `italic 800 32px ${FONT}`
   ctx.textBaseline = 'middle'
   ctx.fillStyle = '#fff'
-  spaced(ctx, 'SLOW MOTION', 96, 70, 6)
+  const x = spaced(ctx, 'SLOW MOTION', 96, 70, 6)
   ctx.fillStyle = CYAN
-  ctx.fillText('×0.5', OUT_W - 170, 70)
+  ctx.fillText('×0.5', x + 18, 70)
   ctx.restore()
 }
 
@@ -294,8 +294,8 @@ function drawSlam(ctx: Ctx, word: string, dt: number, accent: string, frame: num
   const split = 26 * (1 - inK) + (dt < 0.5 ? 6 * rnd(frame) : 2)
   ctx.save()
   ctx.globalAlpha = out
-  // 中央だと選手が隠れるので右上（空・背景側）に置く。スローの黒帯より下
-  ctx.translate(OUT_W - 90, 250)
+  // 中央だと選手が隠れるので右上（空・背景側）に置く
+  ctx.translate(OUT_W - 90, 160)
   ctx.rotate(-0.05)
   ctx.scale(scale, scale)
   ctx.transform(1, 0, -0.2, 1, 0, 0)
