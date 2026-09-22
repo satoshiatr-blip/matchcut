@@ -96,7 +96,7 @@ export const FilePicker = ({ children, onFiles, multiple = true, accept = 'video
   { children: ReactNode; onFiles: (f: FileList) => void; multiple?: boolean; accept?: string; className?: string }) => (
   <label className={`inline-flex items-center justify-center gap-2 cursor-pointer font-bold transition active:scale-[0.97] ${className}`}>
     {children}
-    <input type="file" accept={accept} multiple={multiple} className="hidden"
+    <input type="file" accept={accept || undefined} multiple={multiple} className="hidden"
       onChange={e => { if (e.target.files?.length) onFiles(e.target.files); e.target.value = '' }} />
   </label>
 )

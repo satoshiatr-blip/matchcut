@@ -30,9 +30,29 @@ export default function ExportTab({ project, setProject, files, addFiles }: Prop
   const bgmUrl = useObjectUrl(bgm)
   const [bgmDur, setBgmDur] = useState(0)
   const [bgmPlaying, setBgmPlaying] = useState(false)
+  const [bgmError, setBgmError] = useState('')
   const audioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => { loadBgm().then(f => f && setBgm(f)) }, [])
+
+  async function pickBgm(f: File) {
+    const ok = await new Promise<boolean>(resolve => {
+      const a = new Audio()
+      const url = URL.createObjectURL(f)
+      const done = (v: boolean) => { URL.revokeObjectURL(url); resolve(v) }
+      a.onloadedmetadata = () => done(a.duration > 0)
+      a.onerror = () => done(false)
+      setTimeout(() => done(false), 8000)
+      a.preload = 'metadata'
+      a.src = url
+    })
+    if (!ok) {
+      setBgmError(`「${f.name}」は音楽として読み込めませんでした。mp3・m4a・wav などの音声ファイルを選んでください`)
+      return
+    }
+    setBgmError('')
+    changeBgm(f)
+  }
 
   function changeBgm(f: File | null) {
     setBgm(f)
@@ -141,10 +161,12 @@ export default function ExportTab({ project, setProject, files, addFiles }: Prop
       <div>
         <GroupLabel>BGM</GroupLabel>
         <Card className="space-y-4">
-          <FilePicker accept="audio/*" multiple={false} onFiles={f => changeBgm(f[0])}
+          {/* iOSは accept="audio/*" だとiCloud Driveのmp3等を選べないことがあるので絞らず、選んだ後に確かめる */}
+          <FilePicker accept="" multiple={false} onFiles={f => pickBgm(f[0])}
             className="w-full min-h-12 px-4 rounded-xl bg-raised border border-line !justify-start text-sm">
             <IconMusic className="text-cyan text-lg shrink-0" /><span className="truncate flex-1 text-left">{bgm ? bgm.name : '音楽ファイルを選ぶ（任意）'}</span>
           </FilePicker>
+          {bgmError && <p className="text-sm text-danger bg-danger/10 border border-danger/30 rounded-xl p-3">{bgmError}</p>}
           {bgm && bgmUrl && <>
             <audio ref={audioRef} src={bgmUrl} preload="metadata" onLoadedMetadata={e => setBgmDur(e.currentTarget.duration)} onPause={() => setBgmPlaying(false)} />
             <Slider label="BGMの音量" display={`${Math.round(project.bgmVolume * 100)}%`} min={0} max={1} step={0.05} value={project.bgmVolume}
