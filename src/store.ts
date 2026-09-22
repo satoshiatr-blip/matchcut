@@ -18,6 +18,9 @@ export const emptyProject = (): Project => ({
   gameVolume: 0.8,
   bgmVolume: 0.5,
   grade: true,
+  sfx: true,
+  sfxVolume: 0.8,
+  bgmStart: 0,
 })
 
 export function useProject() {

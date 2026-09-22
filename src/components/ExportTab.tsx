@@ -1,10 +1,18 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { exportHighlight, totalDuration } from '../render'
+import { loadBgm, saveBgm } from '../bgmStore'
+import { playImpactNow } from '../sfx'
 import { IconCheck, IconMusic, IconPhoto, IconSaveVideo } from './icons'
 import { Slam } from './brand'
 import { Button, Card, FilePicker, GroupLabel, Row, ScreenTitle, Portal, Slider, Toast, Toggle, fmt, useObjectUrl, type ProjectProps } from './ui'
 
 type Props = ProjectProps & { files: Map<string, File>; addFiles: (f: FileList) => void }
+
+const FREE_MUSIC = [
+  { name: 'DOVA-SYNDROME', url: 'https://dova-s.jp/', note: '国内最大級のフリーBGM。ジャンル・雰囲気で探せる' },
+  { name: '魔王魂', url: 'https://maou.audio/', note: 'ロック・バトル系など勢いのある曲が多い' },
+  { name: 'Pixabay Music', url: 'https://pixabay.com/music/', note: '海外のフリー音源。スポーツ・エピック系' },
+]
 
 export default function ExportTab({ project, setProject, files, addFiles }: Props) {
   const [bgm, setBgm] = useState<File | null>(null)
@@ -19,6 +27,29 @@ export default function ExportTab({ project, setProject, files, addFiles }: Prop
   const [toast, setToast] = useState('')
   const abortRef = useRef<AbortController | null>(null)
   const resultUrl = useObjectUrl(result)
+  const bgmUrl = useObjectUrl(bgm)
+  const [bgmDur, setBgmDur] = useState(0)
+  const [bgmPlaying, setBgmPlaying] = useState(false)
+  const audioRef = useRef<HTMLAudioElement>(null)
+
+  useEffect(() => { loadBgm().then(f => f && setBgm(f)) }, [])
+
+  function changeBgm(f: File | null) {
+    setBgm(f)
+    setBgmDur(0)
+    saveBgm(f)
+    if (f) setProject(p => ({ ...p, bgmStart: 0 }))
+  }
+
+  function toggleBgm() {
+    const a = audioRef.current
+    if (!a) return
+    if (bgmPlaying) { a.pause(); return }
+    a.currentTime = project.bgmStart
+    a.volume = project.bgmVolume
+    a.play()
+    setBgmPlaying(true)
+  }
 
   const needed = [...new Set(project.scenes.map(s => s.sourceKey))]
   const missing = project.sources.filter(s => needed.includes(s.key) && !files.has(s.key))
@@ -92,17 +123,64 @@ export default function ExportTab({ project, setProject, files, addFiles }: Prop
           <Slider label="試合の音（歓声）" display={`${Math.round(project.gameVolume * 100)}%`} min={0} max={1} step={0.05} value={project.gameVolume}
             onChange={v => setProject(p => ({ ...p, gameVolume: v }))} />
           <div className="h-px bg-line" />
-          <Row label="BGM" hint="市販の曲はSNS公開で著作権の問題になることがあります">
-            {bgm && <button className="text-sm text-danger font-bold" onClick={() => setBgm(null)}>外す</button>}
+          <Row label="効果音" hint="斬撃の「シュッ」、GOALの「ドン」、オープニングの盛り上がり">
+            <Toggle label="効果音" checked={project.sfx} onChange={v => setProject(p => ({ ...p, sfx: v }))} />
           </Row>
-          <FilePicker accept="audio/*" multiple={false} onFiles={f => setBgm(f[0])}
+          {project.sfx && (
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <Slider label="効果音の音量" display={`${Math.round(project.sfxVolume * 100)}%`} min={0} max={1} step={0.05} value={project.sfxVolume}
+                  onChange={v => setProject(p => ({ ...p, sfxVolume: v }))} />
+              </div>
+              <Button className="shrink-0 text-sm" onClick={playImpactNow}>試聴</Button>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <div>
+        <GroupLabel>BGM</GroupLabel>
+        <Card className="space-y-4">
+          <FilePicker accept="audio/*" multiple={false} onFiles={f => changeBgm(f[0])}
             className="w-full min-h-12 px-4 rounded-xl bg-raised border border-line !justify-start text-sm">
-            <IconMusic className="text-cyan text-lg shrink-0" /><span className="truncate">{bgm ? bgm.name : '音楽ファイルを選ぶ（任意）'}</span>
+            <IconMusic className="text-cyan text-lg shrink-0" /><span className="truncate flex-1 text-left">{bgm ? bgm.name : '音楽ファイルを選ぶ（任意）'}</span>
           </FilePicker>
-          {bgm && (
+          {bgm && bgmUrl && <>
+            <audio ref={audioRef} src={bgmUrl} preload="metadata" onLoadedMetadata={e => setBgmDur(e.currentTarget.duration)} onPause={() => setBgmPlaying(false)} />
             <Slider label="BGMの音量" display={`${Math.round(project.bgmVolume * 100)}%`} min={0} max={1} step={0.05} value={project.bgmVolume}
               onChange={v => setProject(p => ({ ...p, bgmVolume: v }))} />
-          )}
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <Slider label="曲の開始位置" display={fmt(project.bgmStart)} min={0} max={Math.max(0, Math.floor(bgmDur - 1))} step={0.5} value={Math.min(project.bgmStart, Math.max(0, bgmDur - 1))}
+                  onChange={v => setProject(p => ({ ...p, bgmStart: v }))} />
+              </div>
+              <Button className="shrink-0 text-sm w-20" onClick={toggleBgm}>{bgmPlaying ? '停止' : '試聴'}</Button>
+            </div>
+            <button className="text-sm text-danger font-bold" onClick={() => changeBgm(null)}>BGMを外す</button>
+          </>}
+        </Card>
+
+        <Card className="mt-3 space-y-3">
+          <p className="font-bold">フリー音源を探す</p>
+          <p className="text-xs text-muted leading-relaxed">
+            サイトで曲をダウンロード（iPhoneでは「ファイル」アプリに保存されます）→ 上の「音楽ファイルを選ぶ」で選択。
+            選んだ曲はアプリが覚えておくので、次の試合でもそのまま使えます。
+          </p>
+          <div className="grid grid-cols-1 gap-2">
+            {FREE_MUSIC.map(m => (
+              <a key={m.url} href={m.url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-between gap-3 min-h-12 px-4 rounded-xl bg-raised border border-line active:scale-[0.98] transition">
+                <span>
+                  <span className="block text-sm font-bold">{m.name}</span>
+                  <span className="block text-[11px] text-muted">{m.note}</span>
+                </span>
+                <span className="text-cyan text-lg">↗</span>
+              </a>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted leading-relaxed">
+            利用条件（クレジット表記の要否・SNSでの使用など）は曲やサイトごとに違います。公開する前に各サイトの規約を確認してください。市販の曲はSNSで著作権の問題になることがあります。
+          </p>
         </Card>
       </div>
 

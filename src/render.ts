@@ -3,6 +3,7 @@ import {
   Input, Mp4OutputFormat, Output, QUALITY_HIGH, canEncodeAudio, canEncodeVideo,
 } from 'mediabunny'
 import type { Player, Project, Scene, ZoomRect } from './types'
+import { impact, riser, slowDown, whoosh } from './sfx'
 
 export const OUT_W = 1920
 export const OUT_H = 1080
@@ -573,6 +574,17 @@ export async function exportHighlight({ project, files, bgm, onProgress, signal 
 
 async function renderAudio(project: Project, getInput: (k: string) => Input, bgm: File | null, total: number) {
   const ac = new OfflineAudioContext(2, Math.ceil(total * SAMPLE_RATE), SAMPLE_RATE)
+  // 効果音・試合音・BGMを重ねても割れないよう、最後にコンプレッサーを通す
+  const master = ac.createDynamicsCompressor()
+  master.threshold.value = -10
+  master.ratio.value = 6
+  master.attack.value = 0.001
+  const trim = ac.createGain()
+  trim.gain.value = 0.85
+  // 立ち上がりの速い「ドン」はコンプが追いつかないので柔らかく頭打ちにする。AAC化での行き過ぎ分の余白も残す
+  const clip = ac.createWaveShaper()
+  clip.curve = Float32Array.from({ length: 2048 }, (_, i) => Math.tanh(((i / 2047) * 2 - 1) * 1.5) / Math.tanh(1.5) * 0.89)
+  master.connect(trim).connect(clip).connect(ac.destination)
   let t = OPEN_SEC
   for (const scene of project.scenes) {
     const aTrack = await getInput(scene.sourceKey).getPrimaryAudioTrack()
@@ -593,7 +605,7 @@ async function renderAudio(project: Project, getInput: (k: string) => Input, bgm
         gain.gain.linearRampToValueAtTime(project.gameVolume, when + f)
         gain.gain.setValueAtTime(project.gameVolume, when + len - f)
         gain.gain.linearRampToValueAtTime(0, when + len)
-        node.connect(gain).connect(ac.destination)
+        node.connect(gain).connect(master)
         node.start(when, a - scene.start, len)
       }
     }
@@ -610,10 +622,29 @@ async function renderAudio(project: Project, getInput: (k: string) => Input, bgm
     gain.gain.linearRampToValueAtTime(v, 1)
     gain.gain.setValueAtTime(v, Math.max(1, total - 2.5))
     gain.gain.linearRampToValueAtTime(0, total)
-    node.connect(gain).connect(ac.destination)
-    node.start(0)
+    node.connect(gain).connect(master)
+    node.start(0, Math.min(project.bgmStart, Math.max(0, music.duration - 1)))
   }
+  if (project.sfx) scheduleSfx(ac, master, project, total)
   return ac.startRendering()
+}
+
+function scheduleSfx(ac: BaseAudioContext, dest: AudioNode, project: Project, total: number) {
+  const out = ac.createGain()
+  out.gain.value = project.sfxVolume
+  out.connect(dest)
+  impact(ac, out, 0.15, 0.9)
+  riser(ac, out, 1.2, OPEN_SEC)
+  let t = OPEN_SEC
+  for (const scene of project.scenes) {
+    whoosh(ac, out, t)
+    const r = slowRange(scene)
+    if (r) slowDown(ac, out, t + outTimeAt(scene, r[0]), 0.8)
+    if (scene.mark > scene.start && scene.mark < scene.end) impact(ac, out, t + outTimeAt(scene, scene.mark))
+    t += sceneOutDuration(scene)
+  }
+  whoosh(ac, out, t)
+  impact(ac, out, Math.min(total - 0.5, t + 0.15), 0.7)
 }
 
 async function readAudio(ac: BaseAudioContext, track: NonNullable<Awaited<ReturnType<Input['getPrimaryAudioTrack']>>>, start: number, end: number) {

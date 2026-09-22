@@ -6,6 +6,7 @@ import { KIND_JA } from '../types'
 import { IconBall, IconForward, IconGlove, IconPlus, IconRewind, IconSpark, IconVideo } from './icons'
 import { Button, Card, FilePicker, ScreenTitle, Toast, fmt, useObjectUrl, type ProjectProps } from './ui'
 import { Slam } from './brand'
+import { playImpactNow } from '../sfx'
 
 type Props = ProjectProps & {
   files: Map<string, File>
@@ -48,6 +49,7 @@ export default function MarkTab({ project, setProject, files, addFiles, removeSo
     if (!v || !active) return
     const s = newScene(active.key, v.currentTime, v.duration || active.duration, kind, project.players[0]?.id ?? null)
     setProject(p => ({ ...p, scenes: [...p.scenes, s] }))
+    playImpactNow()
     setSlam({ n: Date.now(), word: { goal: 'GOAL!', save: 'SAVE!', play: 'NICE!' }[kind] })
     setToast(`${KIND_JA[kind]}を追加  ${fmt(v.currentTime)}`)
     setTimeout(() => setToast(''), 1600)

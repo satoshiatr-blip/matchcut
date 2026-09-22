@@ -37,6 +37,9 @@ export type Project = {
   gameVolume: number
   bgmVolume: number
   grade: boolean
+  sfx: boolean
+  sfxVolume: number
+  bgmStart: number
 }
 
 export const sourceKey = (f: File) => `${f.name}:${f.size}`
