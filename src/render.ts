@@ -294,7 +294,7 @@ function drawPlate(ctx: Ctx, { scene, player, tOut, dur }: DrawInfo, accent: str
   ctx.restore()
 }
 
-// 決定的瞬間に叩きつける巨大ワード（RGBずれ→収束）
+// 決定的瞬間に叩きつけるワード（RGBずれ→収束）
 function drawSlam(ctx: Ctx, word: string, dt: number, accent: string, frame: number) {
   const inK = ease(clamp(dt / 0.14, 0, 1))
   const out = clamp((1.7 - dt) / 0.35, 0, 1)
@@ -302,12 +302,13 @@ function drawSlam(ctx: Ctx, word: string, dt: number, accent: string, frame: num
   const split = 26 * (1 - inK) + (dt < 0.5 ? 6 * rnd(frame) : 2)
   ctx.save()
   ctx.globalAlpha = out
-  ctx.translate(OUT_W / 2, OUT_H / 2 - 40)
-  ctx.rotate(-0.07)
+  // 中央だと選手が隠れるので右上（空・背景側）に置く。スローの黒帯より下
+  ctx.translate(OUT_W - 90, 250)
+  ctx.rotate(-0.05)
   ctx.scale(scale, scale)
   ctx.transform(1, 0, -0.2, 1, 0, 0)
-  ctx.font = `italic 900 ${word.length > 5 ? 190 : 250}px ${FONT}`
-  ctx.textAlign = 'center'
+  ctx.font = `italic 900 ${word.length > 5 ? 120 : 160}px ${FONT}`
+  ctx.textAlign = 'right'
   ctx.textBaseline = 'middle'
   ctx.globalCompositeOperation = 'lighter'
   ctx.fillStyle = 'rgba(255,0,90,0.7)'
