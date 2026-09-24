@@ -137,7 +137,7 @@ export function drawScene(ctx: Ctx, img: CanvasImageSource, w: number, h: number
   if (slow) drawSlowFx(ctx, scene, src, frame)
   drawCorner(ctx, project)
   drawPlate(ctx, info, accent)
-  if (dt >= 0 && dt < 1.7) drawSlam(ctx, KIND_BIG[scene.kind], dt, accent, frame)
+  if (dt >= 0 && dt < 1.7) drawSlam(ctx, KIND_BIG[scene.kind], dt, accent)
   if (dt >= 0 && dt < 0.1) {
     ctx.fillStyle = `rgba(255,255,255,${0.75 * (1 - dt / 0.1)})`
     ctx.fillRect(0, 0, OUT_W, OUT_H)
@@ -287,36 +287,34 @@ function drawPlate(ctx: Ctx, { scene, player, tOut, dur }: DrawInfo, accent: str
 }
 
 // 決定的瞬間に叩きつけるワード（RGBずれ→収束）
-function drawSlam(ctx: Ctx, word: string, dt: number, accent: string, frame: number) {
+// 決定的瞬間に叩きつけるワード（単色＋差し色1本のミニマル構成。海外ハイライトのロワーサード傾向に合わせグリッチ二重像は廃止）
+function drawSlam(ctx: Ctx, word: string, dt: number, accent: string) {
   const inK = ease(clamp(dt / 0.14, 0, 1))
   const out = clamp((1.7 - dt) / 0.35, 0, 1)
-  const scale = 1.9 - 0.9 * inK
-  const split = 26 * (1 - inK) + (dt < 0.5 ? 6 * rnd(frame) : 2)
+  const scale = 1.5 - 0.5 * inK
   ctx.save()
   ctx.globalAlpha = out
-  // 中央だと選手が隠れるので右上（空・背景側）に置く
-  ctx.translate(OUT_W - 90, 160)
-  ctx.rotate(-0.05)
+  // 中央だと選手が隠れるので右上（空・背景側）に置く。ポップイン時の1.5倍スケールでも上端が切れない余白を確保
+  ctx.translate(OUT_W - 90, 260)
+  ctx.rotate(-0.04)
   ctx.scale(scale, scale)
-  ctx.transform(1, 0, -0.2, 1, 0, 0)
+  ctx.transform(1, 0, -0.16, 1, 0, 0)
   ctx.font = `italic 900 ${word.length > 5 ? 120 : 160}px ${FONT}`
   ctx.textAlign = 'right'
   ctx.textBaseline = 'middle'
-  ctx.globalCompositeOperation = 'lighter'
-  ctx.fillStyle = 'rgba(255,0,90,0.7)'
-  ctx.fillText(word, split, 0)
-  ctx.fillStyle = 'rgba(0,200,255,0.8)'
-  ctx.fillText(word, -split, 0)
-  ctx.globalCompositeOperation = 'source-over'
   ctx.lineJoin = 'round'
   ctx.lineWidth = 14
   ctx.strokeStyle = INK
   ctx.shadowColor = accent
-  ctx.shadowBlur = 40
+  ctx.shadowBlur = 32
   ctx.strokeText(word, 0, 0)
   ctx.shadowBlur = 0
   ctx.fillStyle = '#fff'
   ctx.fillText(word, 0, 0)
+  // 差し色の細い一本線（海外の最小構成ロワーサードに寄せたアクセント）
+  const w = ctx.measureText(word).width
+  ctx.fillStyle = accent
+  ctx.fillRect(-w - 4, 28, w + 4, 6)
   ctx.restore()
 }
 

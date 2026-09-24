@@ -13,6 +13,7 @@
 }
 
 :root { color-scheme: dark; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
 body { background: var(--color-ink); color: var(--color-fg); }
 
 input[type='range'] { accent-color: var(--color-cyan); }

@@ -1,15 +1,31 @@
+import { useState } from 'react'
 import type { Tab } from '../App'
+import { exportBackup, importBackup } from '../backup'
 import { emptyProject } from '../store'
 import { uid } from '../types'
 import { IconPlus, IconTrash, IconUp } from './icons'
-import { Button, Card, Field, GroupLabel, ScreenTitle, inputCls, type ProjectProps } from './ui'
+import { Button, Card, Field, FilePicker, GroupLabel, ScreenTitle, inputCls, type ProjectProps } from './ui'
 
-const COLORS = ['#1a73ff', '#3ee0ff', '#ff3b5c', '#22c55e', '#a855f7', '#f97316', '#facc15', '#e5e7eb']
+const COLORS = ['#3ee0ff', '#1a73ff', '#ff3b5c', '#22c55e', '#a855f7', '#f97316', '#facc15', '#e5e7eb']
 
 export default function SetupTab({ project, setProject, go }: ProjectProps & { go: (t: Tab) => void }) {
   const set = <K extends keyof typeof project>(k: K, v: (typeof project)[K]) => setProject(p => ({ ...p, [k]: v }))
   const updatePlayer = (id: string, patch: { number?: string; name?: string }) =>
     setProject(p => ({ ...p, players: p.players.map(x => x.id === id ? { ...x, ...patch } : x) }))
+  const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  async function onImportBackup(files: FileList) {
+    const f = files[0]
+    if (!f) return
+    if (!confirm('今のデータを上書きして復元します。よろしいですか？')) return
+    const r = await importBackup(f)
+    if (r.ok) {
+      setImportMsg({ ok: true, text: '復元しました。反映のため再読み込みします…' })
+      setTimeout(() => location.reload(), 600)
+    } else {
+      setImportMsg({ ok: false, text: r.error })
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -83,6 +99,18 @@ export default function SetupTab({ project, setProject, go }: ProjectProps & { g
       </div>
 
       <Button variant="primary" className="w-full min-h-14 text-lg" onClick={() => go('mark')}>次へ：動画を選ぶ</Button>
+
+      <div>
+        <GroupLabel>データのバックアップ</GroupLabel>
+        <Card className="space-y-3">
+          <p className="text-xs text-muted">選手名簿・試合設定をファイルに書き出せます（動画本体は含みません）</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button className="min-h-11" onClick={exportBackup}>書き出す</Button>
+            <FilePicker accept="application/json" multiple={false} onFiles={onImportBackup} className="min-h-11 rounded-xl border border-line">復元する</FilePicker>
+          </div>
+          {importMsg && <p className={`text-xs ${importMsg.ok ? 'text-emerald-400' : 'text-danger'}`}>{importMsg.text}</p>}
+        </Card>
+      </div>
 
       <button className="w-full py-3 text-sm text-danger/80"
         onClick={() => {

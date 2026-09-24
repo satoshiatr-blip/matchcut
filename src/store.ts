@@ -23,7 +23,7 @@ export const emptyProject = (): Project => ({
   date: today(),
   team: '',
   opponent: '',
-  color: '#1a73ff',
+  color: '#3ee0ff',
   players: [],
   sources: [],
   scenes: [],
