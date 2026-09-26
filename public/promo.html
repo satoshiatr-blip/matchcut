@@ -10,6 +10,8 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#04060c;font-family:'Noto Sans JP',sans-serif;color:#eaf0ff;max-width:480px;margin:0 auto;}
+/* 日本語を単語の途中で折らない（改行は助詞・読点の後ろだけ。印は下のスクリプトで付ける） */
+body{word-break:keep-all;overflow-wrap:anywhere;line-break:strict;}
 .sec{padding:48px 20px;border-bottom:1px solid rgba(255,255,255,0.05);}
 .lbl{font-size:9px;font-weight:700;letter-spacing:3px;color:#3ee0ff;text-transform:uppercase;margin-bottom:4px;}
 .sech{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:20px;}
@@ -52,7 +54,7 @@ body{background:#04060c;font-family:'Noto Sans JP',sans-serif;color:#eaf0ff;max-
 <div class="hero">
   <div class="hero-tag"><span class="live"></span>少年サッカー向け 無料Webアプリ</div>
   <div class="hero-h1">MATCH<em>CUT</em></div>
-  <p class="hero-desc">保護者が1台のiPhoneで撮った試合動画を、<strong>プロのハイライト風</strong>に編集。<br>動画は端末の外に出ません。</p>
+  <p class="hero-desc">保護者が1台のiPhoneで撮った試合動画を、<br><strong>プロのハイライト風</strong>に編集。<br>動画は端末の外に出ません。</p>
   <a href="https://satoshiatr-blip.github.io/matchcut/" target="_blank" style="text-decoration:none;display:block;">
     <div class="cta-box">
       <div class="cta-box-l">インストール不要・完全無料</div>
@@ -62,7 +64,7 @@ body{background:#04060c;font-family:'Noto Sans JP',sans-serif;color:#eaf0ff;max-
   </a>
   <div class="stats">
     <div class="stat"><div class="stat-n">4</div><div class="stat-l">編集ステップ</div></div>
-    <div class="stat"><div class="stat-n">1080p</div><div class="stat-l">出力画質</div></div>
+    <div class="stat"><div class="stat-n">1080p</div><div class="stat-l">画質</div></div>
     <div class="stat"><div class="stat-n">0円</div><div class="stat-l">完全無料</div></div>
     <div class="stat"><div class="stat-n">不要</div><div class="stat-l">インストール</div></div>
   </div>
@@ -74,22 +76,22 @@ body{background:#04060c;font-family:'Noto Sans JP',sans-serif;color:#eaf0ff;max-
   <div class="steps">
     <div class="step">
       <div class="sn">1</div>
-      <div><div class="st">🎥 試合動画を選ぶ</div><div class="sd">前半・後半など複数ファイルもまとめて選べます</div></div>
-      <div class="stag">動画を選ぶ</div>
+      <div><div class="st">📝 試合の情報を入れる</div><div class="sd">チーム名や選手がテロップに入ります</div></div>
+      <div class="stag">試合</div>
     </div>
     <div class="step">
       <div class="sn">2</div>
-      <div><div class="st">⭐ 見せ場をタップしてマーク</div><div class="sd">ゴール・セーブ・ナイスプレーを見ながらマーク</div></div>
+      <div><div class="st">⭐ 動画を選んで見せ場をマーク</div><div class="sd">ゴールやセーブの瞬間をタップ</div></div>
       <div class="stag">マーク</div>
     </div>
     <div class="step">
       <div class="sn">3</div>
-      <div><div class="st">🔍 ズーム・スローを調整</div><div class="sd">シーンごとに画角とスローの有無を編集</div></div>
-      <div class="stag">シーン仕上げ</div>
+      <div><div class="st">🔍 シーンを整える</div><div class="sd">画角とスローをシーンごとに調整</div></div>
+      <div class="stag">シーン</div>
     </div>
     <div class="step">
       <div class="sn">4</div>
-      <div><div class="st">📤 書き出して写真に保存</div><div class="sd">1本の動画にまとめて共有シートから保存</div></div>
+      <div><div class="st">📤 書き出して保存</div><div class="sd">「ビデオを保存」で写真アプリへ</div></div>
       <div class="stag">書き出し</div>
     </div>
   </div>
@@ -101,27 +103,27 @@ body{background:#04060c;font-family:'Noto Sans JP',sans-serif;color:#eaf0ff;max-
   <div class="feats">
     <div class="feat">
       <div class="fi">🔍</div>
-      <div><div class="ft">ズーム・パン編集</div><div class="fd">シーンごとに開始と終わりの画角を指定、自動でカメラワークに</div></div>
+      <div><div class="ft">ズームとカメラワーク</div><div class="fd">シーンの始まりと終わりの画角を決めると、その間を自動でなめらかに動かします</div></div>
     </div>
     <div class="feat">
       <div class="fi">🏷️</div>
-      <div><div class="ft">テロップ自動表示</div><div class="fd">背番号・名前・GOAL/NICE SAVE等の叩きつけ文字</div></div>
+      <div><div class="ft">テロップを自動で表示</div><div class="fd">背番号と名前、「GOAL」「NICE SAVE」などの文字を自動で入れます</div></div>
     </div>
     <div class="feat">
       <div class="fi">🐢</div>
-      <div><div class="ft">スローモーション</div><div class="fd">決定的瞬間だけ短く減速。既定でゴールにON</div></div>
+      <div><div class="ft">スローモーション</div><div class="fd">決定的な瞬間だけ短くスローに。ゴールは最初からスロー付きです</div></div>
     </div>
     <div class="feat">
       <div class="fi">🎵</div>
-      <div><div class="ft">BGM・効果音</div><div class="fd">内蔵の効果音＋好きな曲を追加、音量バランス調整</div></div>
+      <div><div class="ft">BGMと効果音</div><div class="fd">効果音は最初から入っています。好きな曲を足して、音量も調整できます</div></div>
     </div>
     <div class="feat">
       <div class="fi">🎨</div>
-      <div><div class="ft">シネマカラー</div><div class="fd">コントラストと色味を整えてプロっぽい質感に</div></div>
+      <div><div class="ft">映画のような色合い</div><div class="fd">明るさと色味を整えて、プロの映像のような質感にします</div></div>
     </div>
     <div class="feat">
       <div class="fi">⚡</div>
-      <div><div class="ft">斬撃ワイプ演出</div><div class="fd">シーンの切り替わりに電光の斬撃エフェクト</div></div>
+      <div><div class="ft">場面が変わる演出</div><div class="fd">シーンが切り替わるとき、光る斬撃が画面を横切ります</div></div>
     </div>
   </div>
 </div>
@@ -145,5 +147,13 @@ body{background:#04060c;font-family:'Noto Sans JP',sans-serif;color:#eaf0ff;max-
   </div>
 </div>
 
+<script>
+// 助詞・読点の後ろに改行できる印（ゼロ幅スペース）を入れる。続く文字がひらがなのとき（「できます」の「で」など）と「その」「この」の後ろには入れない
+(function(){
+  var re=/((?:[はがをにでともへや、。」）]|(?<![そこあど])の))(?=[^ぁ-ゟ、。」）！？!?\s])/g;
+  var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),n;
+  while((n=w.nextNode())){ if(/[぀-鿿]/.test(n.data)) n.data=n.data.replace(re,'$1​'); }
+})();
+</script>
 </body>
 </html>
